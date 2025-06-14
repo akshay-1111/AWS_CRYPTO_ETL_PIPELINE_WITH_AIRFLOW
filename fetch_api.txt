@@ -1,0 +1,25 @@
+import requests
+import json
+from kafka import KafkaProducer
+
+def lambda_handler(event, context):
+    url ='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=5'
+    producer = KafkaProducer(bootstrap_servers ='172.31.6.235:9092' ,value_serializer = lambda x:json.dumps(x).encode('utf-8'))
+    topic = 'crypto_prices'
+    try:
+        response = requests.get(url,headers = {'User_Agent':'etl_tasks'})
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                print(data)
+                for item in data:
+                    producer.send(topic,value = item)
+                    print('succesfully data snded to kafka')
+                producer.flush()
+            else:
+                print(f'there is no data  from api')
+        else:
+            print(f'error:the status code that returned:{response.status_code}')
+    except Exception as e:
+        print(e)
+
