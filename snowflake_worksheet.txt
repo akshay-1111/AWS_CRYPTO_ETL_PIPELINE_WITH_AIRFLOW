@@ -1,0 +1,67 @@
+CREATE OR REPLACE WAREHOUSE my_wh 
+WAREHOUSE_SIZE = 'XSMALL';
+
+CREATE OR REPLACE DATABASE my_db;
+CREATE OR REPLACE SCHEMA my_db.my_schema;
+
+USE DATABASE my_db;
+USE SCHEMA my_schema;
+
+CREATE OR REPLACE TABLE my_schema.my_table (
+    name String, 
+    symbol String,
+    current_price float,
+    market_cap float,
+    last_updated String,
+    timestamp TIMESTAMP
+);
+
+CREATE OR REPLACE FILE FORMAT parquet_format
+TYPE = 'PARQUET';
+  
+CREATE OR REPLACE STORAGE INTEGRATION my_s3_integration
+TYPE = EXTERNAL_STAGE
+STORAGE_PROVIDER = S3
+ENABLED = TRUE
+STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::077672915583:role/snowflake-s3' 
+STORAGE_ALLOWED_LOCATIONS = ('s3://auto-cryptotask1/consumer-data/');
+
+
+DESC INTEGRATION my_s3_integration;
+
+
+
+CREATE OR REPLACE STAGE my_stage
+URL = 's3://auto-cryptotask1/consumer-data/'
+STORAGE_INTEGRATION = my_s3_integration
+FILE_FORMAT = parquet_format;
+
+
+DESC STAGE my_stage;
+
+
+
+CREATE OR REPLACE PIPE my_schema.my_pipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO my_schema.my_table
+FROM @my_stage
+FILE_FORMAT = parquet_format
+MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+ON_ERROR = 'SKIP_FILE_1%'
+PATTERN = '.*[.]parquet';
+
+
+-- ALTER PIPE my_schema.my_pipe REFRESH;
+
+DESC PIPE my_schema.my_pipe;
+
+
+SELECT * FROM my_table;
+
+
+
+
+
+
+
