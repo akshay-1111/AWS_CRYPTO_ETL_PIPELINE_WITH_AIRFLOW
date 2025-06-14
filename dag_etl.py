@@ -26,6 +26,7 @@ with DAG(
 ) as dag:
 
     # Task 1: Trigger Lambda (API → Kafka)
+    
     def trigger_lambda():
         hook = LambdaHook(aws_conn_id='aws_default')  # Uses Airflow connection
         hook.invoke_lambda(
@@ -48,7 +49,7 @@ with DAG(
     region_name='ap-south-1',
     wait_for_completion=False
 )
-    # print(f"Glue job started :{job_name}")
+    
 
     
 
@@ -58,7 +59,7 @@ with DAG(
         conn = hook.get_conn()
         try:
             with conn.cursor() as cursor:
-                # Try pipe refresh first
+               
                 try:
                     cursor.execute("CALL SYSTEM$PIPE_FORCE_REFRESH('my_pipe')")
                     logging.info("Snowpipe refresh successful")
