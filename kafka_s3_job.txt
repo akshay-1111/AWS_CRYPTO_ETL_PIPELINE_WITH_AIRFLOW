@@ -1,0 +1,53 @@
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from pyspark.sql.functions import from_json, col, to_timestamp
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType
+
+
+sc = SparkContext()
+gc = GlueContext(sc)
+spark = gc.spark_session
+
+# s3A configurations 
+hadoop_conf = spark._jsc.hadoopConfiguration()
+hadoop_conf.set("fs.s3a.connection.timeout", "120000")
+hadoop_conf.set("fs.s3a.connection.establish.timeout", "120000")
+hadoop_conf.set("fs.s3a.attempts.maximum", "5")
+hadoop_conf.set("fs.s3a.endpoint", "s3.ap-south-1.amazonaws.com")  
+hadoop_conf.set("fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+
+
+schema = StructType([
+    StructField('name', StringType()),
+    StructField('symbol', StringType()),
+    StructField('current_price', DoubleType()),
+    StructField('market_cap', DoubleType()),
+    StructField('last_updated', StringType())
+])
+
+
+df = spark.readStream \
+    .format('kafka') \
+    .option('kafka.bootstrap.servers', '172.31.6.235:9092') \
+    .option('subscribe', 'crypto_prices') \
+    .option('startingOffsets', 'latest') \
+    .load()
+
+value = df.selectExpr("CAST(value AS STRING) AS json_value")
+
+dataa = value.select(from_json(col('json_value'), schema).alias('data'))
+
+
+flatt = dataa.select('data.*')
+
+changed_df = flatt.withColumn('last_updated', to_timestamp(col('last_updated')))
+
+tos3 = changed_df.writeStream \
+    .outputMode('append') \
+    .format('parquet') \
+    .option('path', 's3a://auto-cryptotask1/consumer-data/') \
+    .option('checkpointLocation', 's3a://auto-cryptotask1/checkpoint/') \
+    .start()
+
+
+tos3.awaitTermination()
