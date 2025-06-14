@@ -39,7 +39,7 @@ This project shows a real-time ETL pipeline to collect cryptocurrency prices fro
 - Snowflake account + pipe setup
 - Kafka running on EC2
 
-##Project Structure & File Descriptions
+## Project Structure and File Descriptions
 - lambda/fetch_api.txt	    =    AWS Lambda function that fetches real-time crypto prices from the API and pushes them to Kafka (on EC2).
 - glue/kafka_s3_job.txt     =    AWS Glue Spark Streaming script that reads data from Kafka, processes it, and writes to S3 in Parquet format.
 - airflow/dags/dag_etl.py   =	  Airflow DAG that orchestrates the full ETL pipeline: triggers Lambda, runs Glue job, and triggers Snowpipe ingestion or fallback COPY INTO.
