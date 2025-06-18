@@ -3,7 +3,7 @@
 This project shows a real-time ETL pipeline to collect cryptocurrency prices from a public API(coingecko api), process them using AWS services and Apache Spark, and store the data in Snowflake for analytics. The etl is handled by Apache Airflow
 
 ## 📊 Architecture Diagram
-![Real-Time Crypto ETL Architecture](assets/aws_crypto_etl.jpeg)
+![Real-Time Crypto ETL Architecture](https://github.com/akshay-1111/AWS_CRYPTO_ETL_PIPELINE_WITH_AIRFLOW/blob/6ac23181d5e128a2c7c1b92f5aa91502651db6ab/etl_image.jpeg)
 
 ## Architecture
 
